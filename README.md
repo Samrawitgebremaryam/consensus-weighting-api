@@ -171,6 +171,6 @@ What I verified manually:
 
 AI mistakes or draft issues that were manually corrected:
 
-- A simpler dampening formula such as `sum(sqrt(contribution))` was considered initially, but the final implementation uses the quadratic-funding style formula requested in the prompt: `(sum(sqrt(contribution)))^2`.
+- During exploration, a simpler square-root dampening formula such as `sum(sqrt(contribution))` was considered as an alternative, but the final implementation keeps the quadratic-funding-style formula that was selected for this project: `(sum(sqrt(contribution)))^2`.
 - One early generated API test had an incorrect expected `rawTotal`; it was manually corrected after verifying that repeated allocations from the same user still contribute to the target's raw total even though they count as a single unique user for consensus purposes.
 - An earlier validation draft relied on default type coercion, which would have accepted numeric-looking strings such as `"100"` for `amount`; this was tightened so the API now expects real numeric JSON values.
