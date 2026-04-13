@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This project is a small FastAPI service built for a take-home assessment. It accepts a raw JSON array of allocations and returns a weighted score for each `targetId`.
+This project is a small FastAPI service that calculates consensus-aware weights for capital allocations. It accepts a raw JSON array of allocations and returns a weighted score for each `targetId`.
 
 The main design goal is to reward broad consensus more than concentrated capital. A single large contributor should not easily overpower many smaller contributors supporting the same target.
 
@@ -13,6 +13,8 @@ The service uses a quadratic-funding style formula:
 ```text
 weight = (sum(sqrt(each user's total contribution to that target))) ^ 2
 ```
+
+For background on quadratic funding, see [P2P Foundation explainer](https://wiki.p2pfoundation.net/Quadratic_Funding) and the [Gitcoin's overview of Quadratic Funding](https://gitcoin.co/program).
 
 Important implementation detail:
 
@@ -139,7 +141,7 @@ python -m pytest
 
 ## AI Process Log
 
-This project was built with help from AI tools, primarily OpenAI Codex/ChatGPT, to speed up scaffolding, refine the formula explanation, and generate a clean initial test suite.
+This project was built with help from AI tools, primarily OpenAI Codex/ChatGPT, but the weighting approach and final verification decisions were reviewed manually.
 
 Which AI tools were used:
 
@@ -147,19 +149,21 @@ Which AI tools were used:
 
 How the AI was prompted for the math and grouping logic:
 
-- I asked for a weighting approach that favors distributed participation over concentrated capital.
-- I specified that allocations must first be grouped by `targetId`, then combined per `userId` within each target before any weighting formula is applied.
-- I asked for an implementation that follows a quadratic funding style formula and includes automated tests for the concentrated and distributed benchmark cases.
+- I first researched weighting approaches that reward broad consensus over concentrated capital and chose a quadratic funding style formula because it is a widely used and well-regarded approach for rewarding broad participation, especially in systems that use matching funds.
+- After selecting the formula, I prompted the AI to implement the exact equation I chose: `(sum(sqrt(each user's total contribution to that target)))^2`.
+- I specified that allocations must first be grouped by `targetId`, then aggregated by `userId` within each target before the weighting formula is applied.
+- I also asked for automated tests covering the concentrated case, the distributed case, and validation behavior for invalid inputs.
 
 How AI was used:
 
-- To propose a small production-style FastAPI structure.
-- To validate the grouping approach before applying the weighting formula.
-- To check that the implementation combines repeated allocations from the same user before scoring.
-- To generate the required pytest cases for concentrated versus distributed participation.
+- To help scaffold a clean FastAPI project structure.
+- To implement the grouping and weighting logic based on the formula I selected.
+- To generate an initial set of pytest cases for the concentrated and distributed benchmark scenarios.
+- To help draft the README and improve the explanation of the formula and edge cases.
 
 What I verified manually:
 
+- The choice of quadratic funding as the best-fit approach for this challenge before implementation, based on its strong alignment with broad-participation incentives and its practical use in platforms such as Gitcoin.
 - The grouping logic is done per `targetId`, then per `userId`.
 - Repeated allocations from the same user do not create fake consensus.
 - The distributed test case produces a weight at least 2x greater than the concentrated case.
@@ -169,3 +173,4 @@ AI mistakes or draft issues that were manually corrected:
 
 - A simpler dampening formula such as `sum(sqrt(contribution))` was considered initially, but the final implementation uses the quadratic-funding style formula requested in the prompt: `(sum(sqrt(contribution)))^2`.
 - One early generated API test had an incorrect expected `rawTotal`; it was manually corrected after verifying that repeated allocations from the same user still contribute to the target's raw total even though they count as a single unique user for consensus purposes.
+- An earlier validation draft relied on default type coercion, which would have accepted numeric-looking strings such as `"100"` for `amount`; this was tightened so the API now expects real numeric JSON values.
