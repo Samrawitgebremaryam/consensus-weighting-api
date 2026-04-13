@@ -69,3 +69,41 @@ def test_weights_endpoint_handles_empty_input() -> None:
 
     assert response.status_code == 200
     assert response.json() == []
+
+
+def test_weights_endpoint_rejects_non_numeric_amount_strings() -> None:
+    """The API contract should accept JSON numbers, not numeric-looking strings."""
+
+    response = client.post(
+        "/weights",
+        json=[{"userId": "user_1", "targetId": "A", "amount": "100"}],
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": [
+            {
+                "field": "body.0.amount",
+                "message": "Value error, Input should be a valid number",
+            }
+        ]
+    }
+
+
+def test_weights_endpoint_rejects_non_array_payloads() -> None:
+    """The endpoint should require the raw top-level payload to be an array."""
+
+    response = client.post(
+        "/weights",
+        json={"userId": "user_1", "targetId": "A", "amount": 100},
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": [
+            {
+                "field": "body",
+                "message": "Input should be a valid list",
+            }
+        ]
+    }

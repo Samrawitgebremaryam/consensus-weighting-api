@@ -52,3 +52,29 @@ def test_empty_allocation_list_returns_no_results() -> None:
     """An empty payload should produce an empty response list."""
 
     assert calculate_weights([]) == []
+
+
+def test_allocations_are_grouped_independently_per_target() -> None:
+    """The same user can support multiple targets without cross-target merging."""
+
+    allocations = [
+        AllocationIn(userId="user_1", targetId="A", amount=100),
+        AllocationIn(userId="user_1", targetId="B", amount=100),
+        AllocationIn(userId="user_2", targetId="B", amount=100),
+    ]
+
+    results = calculate_weights(allocations)
+
+    assert len(results) == 2
+
+    first_result, second_result = results
+
+    assert first_result.target_id == "B"
+    assert first_result.raw_total == pytest.approx(200)
+    assert first_result.unique_user_count == 2
+    assert first_result.weight == pytest.approx(400)
+
+    assert second_result.target_id == "A"
+    assert second_result.raw_total == pytest.approx(100)
+    assert second_result.unique_user_count == 1
+    assert second_result.weight == pytest.approx(100)

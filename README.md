@@ -123,15 +123,33 @@ python -m pytest
 ## Edge Cases Handled
 
 - Multiple allocations from the same user to the same target are aggregated before weighting.
+- The same user can contribute to multiple targets and is counted independently per target.
 - Empty input lists return an empty list.
+- The top-level request body must be a raw JSON array.
 - `amount` must be numeric and greater than `0`.
+- Numeric-looking strings such as `"100"` are rejected to keep the API contract strict.
 - `userId` and `targetId` must be non-empty strings.
 - Validation errors are returned in a compact and readable format.
 - Results are returned in deterministic order by highest weight first, then `targetId`.
 
+## Assumptions and Limitations
+
+- This API assumes `userId` values are trustworthy and uniquely represent real users.
+- Like any quadratic funding model, the weighting is only as sybil-resistant as the identity layer behind it.
+
 ## AI Process Log
 
 This project was built with help from AI tools, primarily OpenAI Codex/ChatGPT, to speed up scaffolding, refine the formula explanation, and generate a clean initial test suite.
+
+Which AI tools were used:
+
+- OpenAI Codex / ChatGPT for project scaffolding, formula discussion, and test generation support.
+
+How the AI was prompted for the math and grouping logic:
+
+- I asked for a weighting approach that favors distributed participation over concentrated capital.
+- I specified that allocations must first be grouped by `targetId`, then combined per `userId` within each target before any weighting formula is applied.
+- I asked for an implementation that follows a quadratic funding style formula and includes automated tests for the concentrated and distributed benchmark cases.
 
 How AI was used:
 
@@ -147,6 +165,7 @@ What I verified manually:
 - The distributed test case produces a weight at least 2x greater than the concentrated case.
 - Request validation and empty-input behavior work as expected.
 
-One AI-driven design decision that was reviewed carefully:
+AI mistakes or draft issues that were manually corrected:
 
 - A simpler dampening formula such as `sum(sqrt(contribution))` was considered initially, but the final implementation uses the quadratic-funding style formula requested in the prompt: `(sum(sqrt(contribution)))^2`.
+- One early generated API test had an incorrect expected `rawTotal`; it was manually corrected after verifying that repeated allocations from the same user still contribute to the target's raw total even though they count as a single unique user for consensus purposes.
