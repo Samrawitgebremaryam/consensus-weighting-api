@@ -14,7 +14,7 @@ The service uses a quadratic-funding style formula:
 weight = (sum(sqrt(each user's total contribution to that target))) ^ 2
 ```
 
-For background on quadratic funding, see [P2P Foundation explainer](https://wiki.p2pfoundation.net/Quadratic_Funding) and the [Gitcoin's overview of Quadratic Funding](https://gitcoin.co/program).
+For background on quadratic funding, see [P2P Foundation explainer](https://wiki.p2pfoundation.net/Quadratic_Funding)
 
 Important implementation detail:
 
